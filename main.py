@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
 
-bot = Bot(token=os.getenv('BOT_TOKEN', '8352932956:AAGM_8H6vnNGpd4oIBfjvFOvu-RpfP8TdYI'))
+bot = Bot(token=os.getenv('BOT_TOKEN', ''))
 dp = Dispatcher(storage=MemoryStorage())
 
 
@@ -45,6 +45,40 @@ async def receive_anonymous_question(message: Message, state: FSMContext):
         await state.clear()
 
 
+# Фото в анонимном вопросе
+@dp.message(AskQuestion.waiting_for_anonymous_question, F.photo)
+async def receive_anonymous_photo(message: Message, state: FSMContext):
+    recipient_chat_id = 1747437942
+    try:
+        file_id = message.photo[-1].file_id
+        caption = message.caption or ''
+        prefix = 'Пользователь отправил фото анонимно.'
+        full_caption = f'{prefix}\n\n{caption}' if caption else prefix
+        await bot.send_photo(recipient_chat_id, file_id, caption=full_caption)
+        await message.answer('Ваше фото отправлено анонимно.')
+    except Exception:
+        await message.answer('Не удалось отправить фото адресату. Убедитесь, что пользователь ранее писал боту, или укажите корректный chat_id. Если вы видете эту ошибку напишите @Sodacodex)')
+    finally:
+        await state.clear()
+
+
+# Видео в анонимном вопросе
+@dp.message(AskQuestion.waiting_for_anonymous_question, F.video)
+async def receive_anonymous_video(message: Message, state: FSMContext):
+    recipient_chat_id = 1747437942
+    try:
+        file_id = message.video.file_id
+        caption = message.caption or ''
+        prefix = 'Пользователь отправил видео анонимно.'
+        full_caption = f'{prefix}\n\n{caption}' if caption else prefix
+        await bot.send_video(recipient_chat_id, file_id, caption=full_caption)
+        await message.answer('Ваше видео отправлено анонимно.')
+    except Exception:
+        await message.answer('Не удалось отправить видео адресату. Убедитесь, что пользователь ранее писал боту, или укажите корректный chat_id. Если вы видете эту ошибку напишите @Sodacodex)')
+    finally:
+        await state.clear()
+
+
 @dp.callback_query(F.data == 'btn_2')
 async def handle_named_button(callback: CallbackQuery, state: FSMContext):
     await state.set_state(AskQuestion.waiting_for_named_question)
@@ -69,11 +103,48 @@ async def receive_named_question(message: Message, state: FSMContext):
     finally:
         await state.clear()
 
+
+# Фото в вопросе с именем
+@dp.message(AskQuestion.waiting_for_named_question, F.photo)
+async def receive_named_photo(message: Message, state: FSMContext):
+    recipient_chat_id = 1747437942
+    user = message.from_user
+    username = f"@{user.username}" if user.username else (user.full_name or str(user.id))
+    try:
+        file_id = message.photo[-1].file_id
+        caption = message.caption or ''
+        prefix = f'Фото от {username}.'
+        full_caption = f'{prefix}\n\n{caption}' if caption else prefix
+        await bot.send_photo(recipient_chat_id, file_id, caption=full_caption)
+        await message.answer('Ваше фото отправлено с вашим именем.')
+    except Exception:
+        await message.answer('Не удалось отправить фото адресату. Убедитесь, что пользователь ранее писал боту, или укажите корректный chat_id. (Если вы видете эту ошибку напишите @Sodacodex)')
+    finally:
+        await state.clear()
+
+
+# Видео в вопросе с именем
+@dp.message(AskQuestion.waiting_for_named_question, F.video)
+async def receive_named_video(message: Message, state: FSMContext):
+    recipient_chat_id = 1747437942
+    user = message.from_user
+    username = f"@{user.username}" if user.username else (user.full_name or str(user.id))
+    try:
+        file_id = message.video.file_id
+        caption = message.caption or ''
+        prefix = f'Видео от {username}.'
+        full_caption = f'{prefix}\n\n{caption}' if caption else prefix
+        await bot.send_video(recipient_chat_id, file_id, caption=full_caption)
+        await message.answer('Ваше видео отправлено с вашим именем.')
+    except Exception:
+        await message.answer('Не удалось отправить видео адресату. Убедитесь, что пользователь ранее писал боту, или укажите корректный chat_id. (Если вы видете эту ошибку напишите @Sodacodex)')
+    finally:
+        await state.clear()
+
 async def main():
     await dp.start_polling(bot)
 
 
 
 if __name__ == '__main__':
-
     asyncio.run(main())
